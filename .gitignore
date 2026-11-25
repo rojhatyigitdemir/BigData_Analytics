@@ -1,0 +1,29 @@
+# Raw and derived data stay out of git (GitHub rejects files > 100 MB)
+data/raw/
+data/parquet/
+data/agg/
+data/sample/complaints_synthetic.csv
+*.csv.zip
+*.sqlite
+*.duckdb
+*.duckdb.wal
+
+# Generated figures/tables (re-created by code/run_all.R; final results
+# from the full data will be committed explicitly before submission)
+output/
+
+# R session files
+.RData
+.Rhistory
+.Rproj.user/
+*.Rproj
+
+# Knitted output
+report/*.html
+report/*_files/
+report/*_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.ipynb_checkpoints/
