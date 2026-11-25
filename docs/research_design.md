@@ -75,6 +75,11 @@ DuckDB to monthly counts per firm, then expanded to a dense firm-month grid so
 that months with zero complaints are explicit. Rolling windows are computed with
 SQL window functions.
 
+**Analysis window.** Complaints received from May 2017 on. The CFPB reorganised
+its product and issue categories on 24 April 2017, so earlier case-mix measures
+are not comparable. With 12 months of history, the first prediction month is
+April 2018. Details and the column-by-column audit: `docs/data_audit.md`.
+
 **Firm inclusion.** Firms with at least `MIN_FIRM_TOTAL` complaints over the full
 sample (default 500). Smaller firms produce rates too noisy to monitor.
 

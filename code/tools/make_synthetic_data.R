@@ -120,19 +120,15 @@ out <- cx[, .(
   `Sub-product` = "",
   Issue = issue,
   `Sub-issue` = "",
-  `Consumer complaint narrative` = ifelse(runif(.N) < 0.01,
-                                          "Synthetic text, with a comma\nand a line break \"quoted\"", ""),
   `Company public response` = ifelse(runif(.N) < 0.4, "Company has responded to the consumer and the CFPB and chooses not to provide a public response", ""),
   Company = company,
   State = state,
   `ZIP code` = sprintf("%05d", sample(10000:99999, .N, replace = TRUE)),
   Tags = tags,
-  `Consumer consent provided?` = "Consent not provided",
   `Submitted via` = submitted_via,
   `Date sent to company` = format(date_sent, "%Y-%m-%d"),
   `Company response to consumer` = company_response,
   `Timely response?` = ifelse(late, "No", "Yes"),
-  `Consumer disputed?` = "N/A",
   `Complaint ID` = seq_len(.N) + 1000000L
 )]
 setorder(out, `Date received`)

@@ -32,6 +32,9 @@ DUCKDB_FILE   <- file.path(DIR_AGG, "cfpb.duckdb")
 # --- Analysis parameters (see docs/research_design.md, section 5) ------------
 PARAMS <- list(
   # firm inclusion and row eligibility
+  # the CFPB re-organised products/issues on 24 Apr 2017; earlier categories are
+  # not comparable, so the panel uses complaints received from this month on
+  ANALYSIS_START = "2017-05-01",
   MIN_FIRM_TOTAL = 500,   # min complaints over the whole sample
   MIN_PAST12     = 30,    # min complaints in past 12 months at month t
   MIN_NEXT3      = 20,    # min complaints in next 3 months (outcome window)
@@ -56,6 +59,12 @@ if (USE_SYNTHETIC) {
   PARAMS$MIN_CELL_N     <- 50
   PARAMS$WATCHLIST_K    <- 5
 }
+
+# columns the pipeline needs; the public full CSV has them, Excel views and
+# filtered web exports may not (checked in 02_ingest_parquet.R)
+REQUIRED_COLUMNS <- c("Date received", "Date sent to company", "Product", "Issue",
+                      "Company", "State", "Tags", "Submitted via",
+                      "Timely response?", "Complaint ID")
 
 SEED <- 20261204
 set.seed(SEED)

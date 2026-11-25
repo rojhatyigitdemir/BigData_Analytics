@@ -5,10 +5,14 @@
 -- 3-, 9- and 12-month windows (past) and a 3-month window (future outcome).
 -- See docs/research_design.md, section 5, for all definitions.
 --
--- Placeholders: {{PANEL_PARQUET}}, {{DROP_LAST_MONTHS}}, {{VALID_START}},
+-- Placeholders: {{ANALYSIS_START}}, {{PANEL_PARQUET}}, {{DROP_LAST_MONTHS}}, {{VALID_START}},
 --   {{MIN_CELL_N}}, {{MIN_FIRM_TOTAL}}, {{MIN_PAST12}}, {{MIN_NEXT3}},
 --   {{EVENT_ABS}}, {{EVENT_REL}}
 -- =============================================================================
+
+-- 0. Analysis window: complaints received after the 2017 taxonomy change only
+CREATE OR REPLACE TEMP VIEW complaints_a AS
+SELECT * FROM complaints WHERE date_received >= DATE '{{ANALYSIS_START}}';
 
 -- 1. Time bounds: drop the most recent months (complaints may still be open)
 CREATE OR REPLACE TEMP TABLE bounds AS
@@ -20,16 +24,16 @@ FROM complaints;
 --    TRAINING period only (before VALID_START), so test data never leak in.
 CREATE OR REPLACE TEMP TABLE w_cell AS
 SELECT product, issue, COUNT(*) AS n, AVG(is_late) AS r
-FROM complaints WHERE date_received < DATE '{{VALID_START}}'
+FROM complaints_a WHERE date_received < DATE '{{VALID_START}}'
 GROUP BY product, issue;
 
 CREATE OR REPLACE TEMP TABLE w_prod AS
 SELECT product, AVG(is_late) AS r
-FROM complaints WHERE date_received < DATE '{{VALID_START}}'
+FROM complaints_a WHERE date_received < DATE '{{VALID_START}}'
 GROUP BY product;
 
 CREATE OR REPLACE TEMP TABLE w_all AS
-SELECT AVG(is_late) AS r FROM complaints WHERE date_received < DATE '{{VALID_START}}';
+SELECT AVG(is_late) AS r FROM complaints_a WHERE date_received < DATE '{{VALID_START}}';
 
 -- 3. Aggregate complaints to firm x month (the big reduction step)
 CREATE OR REPLACE TEMP TABLE firm_month AS
@@ -47,7 +51,7 @@ SELECT
   SUM(CASE WHEN c.date_sent IS NOT NULL
            THEN GREATEST(date_diff('day', c.date_received, c.date_sent), 0) END) AS lag_days,
   SUM(CASE WHEN c.date_sent IS NOT NULL THEN 1 ELSE 0 END)               AS n_lag
-FROM complaints c
+FROM complaints_a c
 LEFT JOIN w_cell wc ON c.product = wc.product AND c.issue = wc.issue
 LEFT JOIN w_prod wp ON c.product = wp.product
 CROSS JOIN w_all wa
@@ -66,7 +70,7 @@ HAVING SUM(n) >= {{MIN_FIRM_TOTAL}};
 CREATE OR REPLACE TEMP TABLE main_product AS
 SELECT company, arg_max(product, cnt) AS main_product
 FROM (SELECT company, product, COUNT(*) AS cnt
-      FROM complaints
+      FROM complaints_a
       WHERE date_received < DATE '{{VALID_START}}'
       GROUP BY company, product)
 GROUP BY company;

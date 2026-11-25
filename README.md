@@ -107,6 +107,9 @@ SQLite vs. DuckDB benchmark, Shiny watchlist demo.
 
 Raw data are not in the repository (GitHub limit 100 MB). Source:
 <https://www.consumerfinance.gov/data-research/consumer-complaints/>.
+Use the **full CSV** only (`code/01_download.R`): Excel copies and filtered web
+exports (capped at 100,000 rows) can lack the date columns, and the ingest step
+stops if they are missing. See `docs/data_audit.md`.
 `Company response to consumer` and `Company public response` are recorded after
 the firm acts and are never used as predictors (leakage).
 
