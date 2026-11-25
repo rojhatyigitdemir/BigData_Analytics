@@ -60,6 +60,15 @@ install.packages(c("DBI", "duckdb", "data.table", "dplyr", "ggplot2", "scales",
                    "sandwich", "lmtest", "glmnet", "ranger"))
 ```
 
+**1b. Check your setup** (5 seconds)
+
+```r
+source("code/00_preflight.R")
+```
+
+Reports missing packages, free disk space and whether the raw file has the
+required columns. `run_all.R` runs it first and stops if it fails.
+
 **2a. Full data** (downloads the CFPB export into `data/raw/`, not committed)
 
 ```bash
