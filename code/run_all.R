@@ -8,6 +8,10 @@
 
 source("code/00_config.R")
 
+# Check packages, disk space and the raw file before the long run.
+preflight_ok <- source("code/00_preflight.R", local = new.env())$value
+if (!isTRUE(preflight_ok)) stop("Preflight failed; see the messages above.")
+
 if (file.exists(file.path(DIR_TAB, "timings.csv"))) file.remove(file.path(DIR_TAB, "timings.csv"))
 
 if (USE_SYNTHETIC) {
