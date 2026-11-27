@@ -69,6 +69,13 @@ source("code/00_preflight.R")
 Reports missing packages, free disk space and whether the raw file has the
 required columns. `run_all.R` runs it first and stops if it fails.
 
+If the CFPB file is already somewhere else on your machine, point to it instead
+of copying 5 GB into the project:
+
+```r
+Sys.setenv(CFPB_CSV = "C:/Users/you/Downloads/complaints.csv")
+```
+
 **2a. Full data** (downloads the CFPB export into `data/raw/`, not committed)
 
 ```bash

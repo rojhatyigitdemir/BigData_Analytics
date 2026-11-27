@@ -10,9 +10,12 @@
 
 source("code/00_config.R")
 
-ok <- TRUE
+ok  <- TRUE
+log <- character(0)
 say <- function(status, msg) {
-  message(sprintf("[%s] %s", status, msg))
+  line <- sprintf("[%s] %s", status, msg)
+  message(line)
+  log <<- c(log, line)
   if (status == "FAIL") ok <<- FALSE
 }
 
@@ -90,5 +93,14 @@ if (ok) {
 } else {
   message("\nPreflight failed. Fix the FAIL lines above, then run this again.")
 }
+# A copy you can attach to a message instead of copying from the console
+log <- c(sprintf("preflight %s", format(Sys.time(), "%Y-%m-%d %H:%M")),
+         sprintf("working directory: %s", getwd()),
+         sprintf("synthetic mode: %s", USE_SYNTHETIC),
+         "", log, "",
+         if (ok) "RESULT: passed" else "RESULT: failed")
+writeLines(log, "preflight_log.txt")
+message("A copy of this is in preflight_log.txt")
+
 if (!interactive() && !ok) quit(status = 1)
 invisible(ok)

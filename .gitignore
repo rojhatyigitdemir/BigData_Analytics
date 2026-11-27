@@ -27,3 +27,5 @@ report/*_cache/
 .DS_Store
 Thumbs.db
 .ipynb_checkpoints/
+
+preflight_log.txt

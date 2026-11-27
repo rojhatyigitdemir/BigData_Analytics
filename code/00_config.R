@@ -23,7 +23,13 @@ DIR_SQL     <- "code/sql"
 RAW_CSV <- if (USE_SYNTHETIC) {
   "data/sample/complaints_synthetic.csv"
 } else {
-  file.path(DIR_RAW, "complaints.csv")
+  # If the CFPB file already sits somewhere else on your machine, point to it
+  # instead of copying 5 GB into the project:
+  #   Sys.setenv(CFPB_CSV = "C:/Users/you/Downloads/complaints.csv")
+  local({
+    p <- Sys.getenv("CFPB_CSV", "")
+    if (nzchar(p)) p else file.path(DIR_RAW, "complaints.csv")
+  })
 }
 
 PANEL_PARQUET <- file.path(DIR_AGG, "firm_month_panel.parquet")
