@@ -50,7 +50,10 @@ PARAMS <- list(
   VALID_START    = "2023-01-01",
   TEST_START     = "2024-01-01",
   # watchlist size used for precision@K / recall@K
-  WATCHLIST_K    = 10
+  WATCHLIST_K    = 10,
+  # a firm needs this many complaints in the last 3 months to enter the
+  # "risk, minimum volume" ranking (see the watchlist ranking comparison)
+  WATCHLIST_MIN_N = 30
 )
 
 if (USE_SYNTHETIC) {
@@ -58,6 +61,7 @@ if (USE_SYNTHETIC) {
   PARAMS$MIN_FIRM_TOTAL <- 200
   PARAMS$MIN_CELL_N     <- 50
   PARAMS$WATCHLIST_K    <- 5
+  PARAMS$WATCHLIST_MIN_N <- 10
 }
 
 # columns the pipeline needs; the public full CSV has them, Excel views and

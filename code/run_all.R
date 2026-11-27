@@ -24,7 +24,8 @@ steps <- c("code/02_ingest_parquet.R",
            "code/03_build_panel.R",
            "code/04_descriptives.R",
            "code/05_rq1_mechanisms.R",
-           "code/06_rq2_early_warning.R")
+           "code/06_rq2_early_warning.R",
+           "code/tools/make_pipeline_figure.R")
 
 for (s in steps) {
   message("\n==== ", s, " ====")

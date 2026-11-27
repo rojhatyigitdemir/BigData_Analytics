@@ -161,6 +161,21 @@ sub-period to check stability over time.
   - average precision (area under the precision-recall curve);
   - ROC-AUC for reference.
 
+## 6b. Which ranking the watchlist uses
+
+A supervisor has K slots. Ranking by predicted risk alone fills them with very
+small firms, where a late-response rate doubles on a handful of complaints.
+Ranking by **expected extra late responses** (risk x recent volume x the 5pp
+event threshold) asks instead where the most consumers are affected. A third
+option keeps plain risk but requires a minimum recent volume
+(`WATCHLIST_MIN_N`).
+
+`06_rq2_early_warning.R` evaluates all three on the test period and writes
+`output/tables/watchlist_ranking_comparison.csv`: precision@K, the extra late
+responses the list catches per month, the share of all extra late responses
+caught, and the median size of a flagged firm. The choice is a supervisory
+judgement, not a statistical one, and the table makes the trade-off explicit.
+
 ## 7. Why this is a big data problem, and how we handle it
 
 | Step | Tool | Reason |

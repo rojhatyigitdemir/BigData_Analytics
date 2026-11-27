@@ -138,19 +138,68 @@ imp <- data.table(feature = names(m_rf$variable.importance),
                   importance = m_rf$variable.importance)[order(-importance)]
 fwrite(imp, file.path(DIR_TAB, "rq2_rf_importance.csv"))
 
+# --- Which ranking should the watchlist use? ----------------------------------
+# A supervisor has K slots. Ranking by predicted risk alone tends to fill them
+# with very small firms, where a late-response rate doubles on a handful of
+# complaints. Ranking by EXPECTED EXTRA LATE RESPONSES instead asks where the
+# most consumers are affected: risk x recent volume x the 5pp event threshold.
+# A third option keeps plain risk but requires a minimum recent volume.
+# We judge the three on two things: how often a flagged firm really
+# deteriorates, and how many extra late responses the list actually catches.
+best <- metrics[set == "valid" & !grepl("baseline", model)][which.max(avg_precision), model]
+K    <- PARAMS$WATCHLIST_K
+
+add_rankings <- function(d) {
+  d <- copy(d)
+  d[, risk        := get(score_cols[[best]])]
+  d[, excess      := risk * n_last3 * PARAMS$EVENT_ABS]
+  d[, risk_minvol := fifelse(n_last3 >= PARAMS$WATCHLIST_MIN_N, risk, NA_real_)]
+  d
+}
+
+rank_labels <- c(risk = "Risk only",
+                 excess = "Expected extra late responses",
+                 risk_minvol = sprintf("Risk, at least %d complaints", PARAMS$WATCHLIST_MIN_N))
+
+compare_rankings <- function(df) {
+  d <- add_rankings(df)
+  rbindlist(lapply(names(rank_labels), function(r) {
+    per_month <- d[!is.na(get(r)), {
+      o <- order(-get(r))[seq_len(min(K, .N))]
+      .(precision         = mean(deteriorate[o]),
+        extra_late_caught = sum(n_next3[o] * pmax(delta_next[o], 0)),
+        extra_late_total  = sum(n_next3 * pmax(delta_next, 0)),
+        median_firm_size  = median(n_last3[o]))
+    }, by = month]
+    data.table(ranking                = rank_labels[[r]],
+               precision_at_k         = mean(per_month$precision),
+               extra_late_per_month   = mean(per_month$extra_late_caught),
+               share_of_extra_late    = sum(per_month$extra_late_caught) /
+                                        sum(per_month$extra_late_total),
+               median_firm_complaints = median(per_month$median_firm_size))
+  }))
+}
+
+ranking_cmp <- compare_rankings(test)
+fwrite(ranking_cmp, file.path(DIR_TAB, "watchlist_ranking_comparison.csv"))
+message("\nWatchlist ranking options, test period (K = ", K, "):")
+print(ranking_cmp[, lapply(.SD, function(x) if (is.numeric(x)) round(x, 3) else x)])
+
 # --- The application: latest monthly watchlist --------------------------------
 # Rows in the most recent month have no outcome yet; this is what a supervisor
-# would receive today.
-latest <- align_levels(panel[month == max(month)])
-latest <- score_all(latest)
-best <- metrics[set == "valid" & !grepl("baseline", model)][which.max(avg_precision), model]
-latest[, risk := get(score_cols[[best]])]
-watchlist <- latest[order(-risk)][, .(rank = .I, company, month, risk = round(risk, 3),
-                                      late_last3 = round(late_last3, 3),
-                                      late_past12 = round(late_past12, 3),
-                                      vol_surge = round(vol_surge, 2),
-                                      casemix_shift = round(casemix_shift, 4),
-                                      n_last3)]
+# would receive today. Both rankings are shown so the choice stays visible.
+latest <- add_rankings(score_all(align_levels(panel[month == max(month)])))
+latest[, `:=`(rank_by_excess = frank(-excess, ties.method = "first"),
+              rank_by_risk   = frank(-risk,   ties.method = "first"))]
+watchlist <- latest[order(rank_by_excess)][
+  , .(rank_by_excess, rank_by_risk, company, month,
+      risk                 = round(risk, 3),
+      expected_extra_late  = round(excess, 1),
+      n_last3,
+      late_last3           = round(late_last3, 3),
+      late_past12          = round(late_past12, 3),
+      vol_surge            = round(vol_surge, 2),
+      casemix_shift        = round(casemix_shift, 4))]
 fwrite(head(watchlist, 25), file.path(DIR_TAB, "watchlist_latest.csv"))
 message("Model used for the watchlist (best on validation): ", best)
 
